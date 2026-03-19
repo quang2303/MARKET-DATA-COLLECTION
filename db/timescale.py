@@ -7,6 +7,20 @@ from core.models import OHLCV
 
 logger = logging.getLogger(__name__)
 
+# Upsert SQL — idempotent on (symbol, timeframe, timestamp).
+# Refreshes OHLCV prices in case a live candle was corrected by the exchange.
+_UPSERT_SQL = """
+    INSERT INTO ohlcv_data (symbol, timestamp, open, high, low, close, volume, timeframe)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    ON CONFLICT (symbol, timeframe, timestamp)
+    DO UPDATE SET
+        open   = EXCLUDED.open,
+        high   = EXCLUDED.high,
+        low    = EXCLUDED.low,
+        close  = EXCLUDED.close,
+        volume = EXCLUDED.volume;
+"""
+
 
 class TimescaleDBClient:
     """
@@ -28,9 +42,44 @@ class TimescaleDBClient:
             await self.pool.close()
             logger.info("Closed TimescaleDB connection pool.")
 
+    async def upsert_ohlcv(self, data: List[OHLCV]) -> None:
+        """
+        Idempotent bulk upsert of OHLCV data using INSERT ... ON CONFLICT DO UPDATE.
+
+        Safe to call multiple times with the same data — re-fetching will never
+        create duplicate candles. If the exchange corrects a live candle, the
+        updated open/high/low/close/volume values will be written to the DB.
+        """
+        if not self.pool:
+            raise RuntimeError("Database connection pool is not initialized.")
+
+        if not data:
+            return
+
+        records: List[tuple[str, Any, float, float, float, float, float, str]] = [
+            (
+                item.symbol,
+                item.timestamp,
+                item.open,
+                item.high,
+                item.low,
+                item.close,
+                item.volume,
+                item.timeframe,
+            )
+            for item in data
+        ]
+
+        async with self.pool.acquire() as connection:
+            await connection.executemany(_UPSERT_SQL, records)
+            logger.debug(f"Successfully upserted {len(records)} OHLCV records.")
+
     async def bulk_insert_ohlcv(self, data: List[OHLCV]) -> None:
         """
-        Perform high-speed bulk insert of OHLCV data using copy_records_to_table.
+        DEPRECATED: Use upsert_ohlcv() instead.
+
+        This function uses copy_records_to_table which does NOT enforce the unique
+        constraint and will create duplicate rows on re-fetch.
         """
         if not self.pool:
             raise RuntimeError("Database connection pool is not initialized.")

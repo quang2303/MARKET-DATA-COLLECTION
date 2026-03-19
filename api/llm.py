@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from google import genai
 from core.schemas import MarketDataQuery
 
@@ -17,6 +18,8 @@ def parse_text_to_query(text: str) -> MarketDataQuery:
     prompt = f"""
     You are an AI assistant specialized in analyzing market data queries (crypto/stocks).
     Your task is to read the user's request and extract the necessary parameters to query the DB.
+    
+    Current Date and Time (UTC): {datetime.utcnow().isoformat() + "Z"}
     
     User query: "{text}"
     

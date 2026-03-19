@@ -14,7 +14,7 @@ from db.database import init_db_pool, close_db_pool
 from api.routers.market_data import router as market_data_router
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:

@@ -4,6 +4,20 @@ from datetime import datetime
 import asyncpg
 from core.models import OHLCV
 
+# Upsert SQL — idempotent on (symbol, timeframe, timestamp).
+# Refreshes OHLCV prices in case a live candle was corrected by the exchange.
+_UPSERT_SQL = """
+    INSERT INTO ohlcv_data (symbol, timestamp, open, high, low, close, volume, timeframe)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    ON CONFLICT (symbol, timeframe, timestamp)
+    DO UPDATE SET
+        open   = EXCLUDED.open,
+        high   = EXCLUDED.high,
+        low    = EXCLUDED.low,
+        close  = EXCLUDED.close,
+        volume = EXCLUDED.volume;
+"""
+
 # Global connection pool instance
 pool: asyncpg.Pool | None = None
 
@@ -34,10 +48,40 @@ async def get_db_connection() -> AsyncGenerator[asyncpg.Connection, None]:
     async with pool.acquire() as conn:
         yield conn
 
+async def upsert_ohlcv(conn: asyncpg.Connection, data: List[OHLCV]) -> None:
+    """
+    Idempotent bulk upsert of OHLCV data using INSERT ... ON CONFLICT DO UPDATE.
+
+    Safe to call multiple times with the same data — re-fetching will never
+    create duplicate candles. If the exchange corrects a live candle, the
+    updated open/high/low/close/volume values will be written to the DB.
+    """
+    if not data:
+        return
+
+    records = [
+        (
+            item.symbol,
+            item.timestamp,
+            item.open,
+            item.high,
+            item.low,
+            item.close,
+            item.volume,
+            item.timeframe,
+        )
+        for item in data
+    ]
+
+    await conn.executemany(_UPSERT_SQL, records)
+
+
 async def bulk_insert_ohlcv(conn: asyncpg.Connection, data: List[OHLCV]) -> None:
     """
-    Bulk insert raw OHLCV data into the database using asyncpg's copy_records_to_table.
-    This respects the data interface requirement where input is List[OHLCV].
+    DEPRECATED: Use upsert_ohlcv() instead.
+
+    This function uses copy_records_to_table which does NOT enforce the unique
+    constraint and will create duplicate rows on re-fetch.
     """
     if not data:
         return
