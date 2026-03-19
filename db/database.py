@@ -1,7 +1,9 @@
 import os
-from typing import List, AsyncGenerator
-from datetime import datetime
+from collections.abc import AsyncGenerator
+from datetime import datetime, timezone
+
 import asyncpg
+
 from core.models import OHLCV
 
 # Upsert SQL — idempotent on (symbol, timeframe, timestamp).
@@ -48,7 +50,7 @@ async def get_db_connection() -> AsyncGenerator[asyncpg.Connection, None]:
     async with pool.acquire() as conn:
         yield conn
 
-async def upsert_ohlcv(conn: asyncpg.Connection, data: List[OHLCV]) -> None:
+async def upsert_ohlcv(conn: asyncpg.Connection, data: list[OHLCV]) -> None:
     """
     Idempotent bulk upsert of OHLCV data using INSERT ... ON CONFLICT DO UPDATE.
 
@@ -76,7 +78,7 @@ async def upsert_ohlcv(conn: asyncpg.Connection, data: List[OHLCV]) -> None:
     await conn.executemany(_UPSERT_SQL, records)
 
 
-async def bulk_insert_ohlcv(conn: asyncpg.Connection, data: List[OHLCV]) -> None:
+async def bulk_insert_ohlcv(conn: asyncpg.Connection, data: list[OHLCV]) -> None:
     """
     DEPRECATED: Use upsert_ohlcv() instead.
 
@@ -113,7 +115,7 @@ async def get_market_data(
     timeframe: str,
     start_time: datetime,
     end_time: datetime,
-) -> List[OHLCV]:
+) -> list[OHLCV]:
     """
     Retrieve OHLCV data from the DB based on parameters.
     The result is parsed into a unified OHLCV model.
@@ -128,6 +130,40 @@ async def get_market_data(
         ORDER BY timestamp ASC
     """
     rows = await conn.fetch(query, symbol, timeframe, start_time, end_time)
-    
+
     # Map the returned results to OHLCV models
     return [OHLCV(**dict(row)) for row in rows]
+
+
+async def get_latest_timestamp(
+    conn: asyncpg.Connection,
+    symbol: str,
+    timeframe: str,
+) -> datetime | None:
+    """
+    Return the most recent candle timestamp stored for a given (symbol, timeframe).
+
+    Used by the incremental ingest service to determine where to resume fetching
+    so that no data is missed and no unnecessary re-fetching occurs.
+
+    Args:
+        conn: Active asyncpg connection.
+        symbol: Standardised symbol, e.g. ``"BTC/USDT"``.
+        timeframe: Candle interval, e.g. ``"1h"``.
+
+    Returns:
+        The latest ``datetime`` (UTC-aware) stored in the DB, or ``None`` if the
+        table contains no rows for this (symbol, timeframe) pair.
+    """
+    row = await conn.fetchrow(
+        "SELECT MAX(timestamp) AS latest FROM ohlcv_data WHERE symbol = $1 AND timeframe = $2",
+        symbol,
+        timeframe,
+    )
+    if row is None or row["latest"] is None:
+        return None
+    ts: datetime = row["latest"]
+    # asyncpg returns TIMESTAMPTZ as an aware datetime — ensure UTC tzinfo is set.
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    return ts

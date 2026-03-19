@@ -1,43 +1,57 @@
+"""
+seed_db.py
+
+Incrementally seeds (or refreshes) the database using the ingest service.
+Safe to re-run — upsert logic ensures no duplicates are created.
+
+Usage:
+    python seed_db.py
+"""
+
 import asyncio
+import logging
+
 from dotenv import load_dotenv
 
+from db import database
+from db.database import close_db_pool, init_db_pool
 from fetchers.binance import BinanceFetcher
-from db.timescale import TimescaleDBClient
-from db.database import init_db_pool, pool, close_db_pool, upsert_ohlcv
+from services.ingest import ingest_ohlcv
 
-async def main():
-    print("Loading environment variables...")
+logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(message)s")
+logger = logging.getLogger("seed_db")
+
+
+async def main() -> None:
+    logger.info("Loading environment variables...")
     load_dotenv(override=True)
-    
-    print("Initializing Database connection...")
+
+    logger.info("Initializing database connection pool...")
     await init_db_pool()
-    
+
     try:
-        from db import database
         if database.pool is None:
-            raise RuntimeError("Database connection failed.")
-            
-        print("Fetching data from Binance...")
+            raise RuntimeError("Database connection pool failed to initialize.")
+
         fetcher = BinanceFetcher()
-        # Fetch 500 candles of 15m timeframe for BTC/USDT
-        data_15m = await fetcher.fetch_ohlcv("BTCUSDT", "15m", limit=500)
-        print(f"Fetched {len(data_15m)} 15m candles.")
-        
-        # Fetch 500 candles of 1h timeframe for BTC/USDT
-        data_1h = await fetcher.fetch_ohlcv("BTCUSDT", "1h", limit=500)
-        print(f"Fetched {len(data_1h)} 1h candles.")
-        
-        print("Upserting data into TimescaleDB (idempotent — safe to re-run)...")
+
+        pairs = [
+            ("BTCUSDT", "15m"),
+            ("BTCUSDT", "1h"),
+        ]
+
         async with database.pool.acquire() as conn:
-            await upsert_ohlcv(conn, data_15m)
-            await upsert_ohlcv(conn, data_1h)
-            
-        print("Successfully seeded the database!")
-        
-    except Exception as e:
-        print(f"Error: {e}")
+            for symbol, timeframe in pairs:
+                n = await ingest_ohlcv(conn, fetcher, symbol, timeframe)
+                logger.info(f"[{symbol}/{timeframe}] Upserted {n} candles.")
+
+        logger.info("Seed complete.")
+
+    except Exception as exc:
+        logger.error(f"Seed failed: {exc}", exc_info=True)
     finally:
         await close_db_pool()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

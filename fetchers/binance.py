@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any
 
 import httpx
 from tenacity import (
@@ -14,10 +14,16 @@ from core.models import OHLCV
 
 logger = logging.getLogger(__name__)
 
+# Binance hard limit per request
+_BINANCE_MAX_LIMIT = 1000
+
 
 class BinanceFetcher:
     """
     Client components for fetching Market Data from Binance API.
+
+    Supports both simple limit-based fetches and time-range fetches
+    with automatic pagination for large time intervals.
     """
 
     def __init__(self, base_url: str = "https://api.binance.com") -> None:
@@ -29,34 +35,79 @@ class BinanceFetcher:
         """
         self.base_url = base_url
 
+    async def fetch_ohlcv(
+        self,
+        symbol: str,
+        interval: str,
+        limit: int = 500,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+    ) -> list[OHLCV]:
+        """
+        Fetches OHLCV data from Binance API and parses it into List[OHLCV].
+
+        When ``start_time`` is provided the fetcher paginates automatically
+        until all candles in the requested range have been collected.
+        When only ``limit`` is provided (legacy mode) a single request is made.
+
+        Args:
+            symbol (str): Trading pair symbol, exchange-native format (e.g. "BTCUSDT").
+            interval (str): Timeframe interval (e.g. "1m", "1h", "1d").
+            limit (int): Max candles per request when NOT using start_time. Defaults to 500.
+            start_time (datetime | None): Inclusive range start (UTC-aware). If provided,
+                pagination is used and ``limit`` is ignored.
+            end_time (datetime | None): Inclusive range end (UTC-aware). Defaults to now.
+
+        Returns:
+            List[OHLCV]: A deduplicated, time-ordered list of validated OHLCV models.
+        """
+        if start_time is not None:
+            return await self._fetch_range(symbol, interval, start_time, end_time)
+        else:
+            return await self._fetch_page(symbol, interval, limit=limit)
+
     @retry(
         retry=retry_if_exception_type(httpx.HTTPStatusError),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         stop=stop_after_attempt(5),
         reraise=True,
     )
-    async def fetch_ohlcv(
-        self, symbol: str, interval: str, limit: int = 500
-    ) -> List[OHLCV]:
+    async def _fetch_page(
+        self,
+        symbol: str,
+        interval: str,
+        limit: int = _BINANCE_MAX_LIMIT,
+        start_time_ms: int | None = None,
+        end_time_ms: int | None = None,
+    ) -> list[OHLCV]:
         """
-        Fetches OHLCV data from Binance API and parses it to a List[OHLCV].
-        Handles HTTP 429 Too Many Requests with exponential backoff strategy.
+        Fetches a single page of klines from Binance.
+        Handles HTTP 429 with exponential backoff via @retry.
 
         Args:
-            symbol (str): Trading pair symbol (e.g., "BTCUSDT")
-            interval (str): Timeframe interval (e.g., "1m", "1h", "1d")
-            limit (int, optional): Number of records. Defaults to 500.
+            symbol (str): Exchange-native symbol (e.g. "BTCUSDT").
+            interval (str): Binance interval string.
+            limit (int): Max candles to return (Binance cap: 1000).
+            start_time_ms (int | None): startTime in Unix milliseconds.
+            end_time_ms (int | None): endTime in Unix milliseconds.
 
         Returns:
-            List[OHLCV]: A list of validated OHLCV Pydantic models.
+            List[OHLCV]: Parsed and validated OHLCV models for this page.
         """
         endpoint = f"{self.base_url}/api/v3/klines"
-        params: Dict[str, str | int] = {"symbol": symbol, "interval": interval, "limit": limit}
+        params: dict[str, Any] = {
+            "symbol": symbol,
+            "interval": interval,
+            "limit": min(limit, _BINANCE_MAX_LIMIT),
+        }
+        if start_time_ms is not None:
+            params["startTime"] = start_time_ms
+        if end_time_ms is not None:
+            params["endTime"] = end_time_ms
 
         async with httpx.AsyncClient() as client:
             response = await client.get(endpoint, params=params)
 
-            # Raise an HTTPStatusError if one occurred.
             if response.status_code == 429:
                 logger.warning("Binance API Rate Limit Exceeded (HTTP 429). Retrying...")
                 response.raise_for_status()
@@ -64,15 +115,79 @@ class BinanceFetcher:
                 logger.error(f"Binance API returned {response.status_code}: {response.text}")
                 response.raise_for_status()
 
-            data: List[List[Any]] = response.json()
+            data: list[list[Any]] = response.json()
 
         return self._parse_binance_klines(symbol, interval, data)
 
-    def _parse_binance_klines(
-        self, symbol: str, timeframe: str, data: List[List[Any]]
-    ) -> List[OHLCV]:
+    async def _fetch_range(
+        self,
+        symbol: str,
+        interval: str,
+        start_time: datetime,
+        end_time: datetime | None = None,
+    ) -> list[OHLCV]:
         """
-        Parses raw list of lists responses from Binance into OHLCV core models.
+        Paginates through Binance kline API to collect all candles in
+        [start_time, end_time].  Each page advances the cursor to the
+        timestamp immediately after the last returned candle.
+
+        Args:
+            symbol (str): Exchange-native symbol (e.g. "BTCUSDT").
+            interval (str): Binance interval string.
+            start_time (datetime): Inclusive start (UTC-aware).
+            end_time (datetime | None): Inclusive end (UTC-aware). Defaults to now.
+
+        Returns:
+            List[OHLCV]: Full, ordered, time-contiguous list across all pages.
+        """
+        if end_time is None:
+            end_time = datetime.now(tz=timezone.utc)
+
+        cursor_ms = int(start_time.timestamp() * 1000)
+        end_ms = int(end_time.timestamp() * 1000)
+
+        all_candles: list[OHLCV] = []
+
+        while cursor_ms <= end_ms:
+            page = await self._fetch_page(
+                symbol,
+                interval,
+                limit=_BINANCE_MAX_LIMIT,
+                start_time_ms=cursor_ms,
+                end_time_ms=end_ms,
+            )
+
+            if not page:
+                # No more data available in the requested range
+                break
+
+            all_candles.extend(page)
+            logger.debug(
+                f"Fetched page: {len(page)} candles "
+                f"({page[0].timestamp.isoformat()} → {page[-1].timestamp.isoformat()})"
+            )
+
+            # Advance cursor: last candle's timestamp + 1 ms to avoid re-fetching it
+            last_ts_ms = int(page[-1].timestamp.timestamp() * 1000)
+            if last_ts_ms <= cursor_ms:
+                # Safety guard: if cursor didn't advance, break to avoid infinite loop
+                logger.warning(
+                    "Pagination cursor did not advance. Stopping to prevent infinite loop."
+                )
+                break
+            cursor_ms = last_ts_ms + 1
+
+        logger.info(
+            f"[{symbol}/{interval}] Fetched {len(all_candles)} candles total "
+            f"from {start_time.isoformat()} to {end_time.isoformat()}"
+        )
+        return all_candles
+
+    def _parse_binance_klines(
+        self, symbol: str, timeframe: str, data: list[list[Any]]
+    ) -> list[OHLCV]:
+        """
+        Parses raw list-of-lists responses from Binance into OHLCV core models.
 
         Args:
             symbol (str): The trading symbol.
@@ -82,7 +197,10 @@ class BinanceFetcher:
         Returns:
             List[OHLCV]: Parsed list of models.
         """
-        parsed_data: List[OHLCV] = []
+        # Standardize symbol formatting (e.g. BTCUSDT -> BTC/USDT)
+        standard_symbol = f"{symbol[:-4]}/{symbol[-4:]}" if symbol.endswith("USDT") else symbol
+
+        parsed_data: list[OHLCV] = []
         for row in data:
             # Binance kline format:
             # [
@@ -97,9 +215,6 @@ class BinanceFetcher:
             volume = float(row[5])
 
             timestamp = datetime.fromtimestamp(open_time_ms / 1000.0, tz=timezone.utc)
-
-            # Standardize symbol formatting (e.g. BTCUSDT -> BTC/USDT)
-            standard_symbol = f"{symbol[:-4]}/{symbol[-4:]}" if symbol.endswith("USDT") else symbol
 
             ohlcv = OHLCV(
                 symbol=standard_symbol,

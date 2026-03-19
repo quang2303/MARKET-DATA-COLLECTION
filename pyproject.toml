@@ -45,7 +45,7 @@ warn_return_any = true
 no_implicit_optional = true
 
 [tool.setuptools]
-packages = ["core", "api", "db", "fetchers"]
+packages = ["core", "api", "db", "fetchers", "services"]
 
 [[tool.mypy.overrides]]
 module = ["asyncpg", "asyncpg.*"]
