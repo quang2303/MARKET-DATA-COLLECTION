@@ -191,6 +191,31 @@ python -m black .
 
 ---
 
+## 🧪 Testing
+
+```bash
+# Run unit tests (no DB or API keys required)
+python -m pytest -v
+
+# Run ALL tests including integration (requires running TimescaleDB)
+python -m pytest -v tests/
+```
+
+Unit tests mock all external dependencies (database, LLM). Integration tests (`test_upsert_ohlcv.py`, `test_incremental_ingest.py`) require a running TimescaleDB instance.
+
+---
+
+## 🤖 CI
+
+GitHub Actions runs automatically on every **push** and **pull request**:
+
+| Step | Command |
+|------|---------|
+| Lint | `ruff check .` |
+| Format | `black --check .` |
+| Type check | `mypy .` |
+| Tests | `pytest -v` (unit tests only) |
+
 ## 📜 License
 
 MIT
