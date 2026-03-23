@@ -67,7 +67,7 @@ def app_client() -> httpx.AsyncClient:
     from httpx import ASGITransport
 
     test_app = _build_test_app()
-    transport = ASGITransport(app=test_app)  # type: ignore[arg-type]
+    transport = ASGITransport(app=test_app)
     return httpx.AsyncClient(transport=transport, base_url="http://test")
 
 

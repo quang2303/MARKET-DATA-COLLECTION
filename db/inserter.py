@@ -1,6 +1,6 @@
 from typing import Any
 
-import asyncpg  # type: ignore
+import asyncpg
 
 from core.models import OHLCV
 

@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 import asyncpg
 import pytest
 import pytest_asyncio
+from collections.abc import AsyncGenerator
 from dotenv import load_dotenv
 
 from core.models import OHLCV
@@ -35,7 +36,7 @@ DATABASE_URL = os.getenv(
 
 
 @pytest_asyncio.fixture
-async def conn():
+async def conn() -> AsyncGenerator[asyncpg.Connection, None]:
     """Provide a real DB connection and roll back after each test."""
     connection = await asyncpg.connect(DATABASE_URL)
     await connection.execute("BEGIN")
@@ -70,7 +71,7 @@ def _make_candle(
 
 
 @pytest.mark.asyncio
-async def test_upsert_is_idempotent(conn):
+async def test_upsert_is_idempotent(conn: asyncpg.Connection) -> None:
     """
     Inserting the same list of candles twice must not create duplicate rows.
     COUNT(*) after the second call must equal len(data), not 2*len(data).
@@ -102,7 +103,7 @@ async def test_upsert_is_idempotent(conn):
 
 
 @pytest.mark.asyncio
-async def test_upsert_updates_close_price(conn):
+async def test_upsert_updates_close_price(conn: asyncpg.Connection) -> None:
     """
     If the same (symbol, timeframe, timestamp) is inserted with a different
     close price, the DB row must reflect the new value.
@@ -133,7 +134,7 @@ async def test_upsert_updates_close_price(conn):
 
 
 @pytest.mark.asyncio
-async def test_different_symbol_and_timeframe_are_independent(conn):
+async def test_different_symbol_and_timeframe_are_independent(conn: asyncpg.Connection) -> None:
     """
     Candles with the same timestamp but different symbol or timeframe
     must be stored as separate rows — no false conflict.

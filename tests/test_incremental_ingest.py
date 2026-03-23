@@ -23,6 +23,8 @@ Run:
 import os
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
+from collections.abc import AsyncGenerator
+from typing import Any
 
 import asyncpg
 import pytest
@@ -46,7 +48,7 @@ DATABASE_URL = os.getenv(
 
 
 @pytest_asyncio.fixture
-async def conn():
+async def conn() -> AsyncGenerator[asyncpg.Connection, None]:
     """Provide a real DB connection and roll back after each test."""
     connection = await asyncpg.connect(DATABASE_URL)
     await connection.execute("BEGIN")
@@ -97,7 +99,7 @@ def _make_candles(
 
 
 @pytest.mark.asyncio
-async def test_double_ingest_no_duplicates(conn):
+async def test_double_ingest_no_duplicates(conn: asyncpg.Connection) -> None:
     """
     Call ingest_ohlcv with the same mocked data twice.
     Row count must equal len(data), never 2*len(data).
@@ -129,7 +131,7 @@ async def test_double_ingest_no_duplicates(conn):
 
 
 @pytest.mark.asyncio
-async def test_incremental_advances_from_db_latest_timestamp(conn):
+async def test_incremental_advances_from_db_latest_timestamp(conn: asyncpg.Connection) -> None:
     """
     After seeding T=0..4h, the next ingest (no explicit start_time) must
     pass a start_time argument to the fetcher that is >= T=4h - overlap.
@@ -148,7 +150,7 @@ async def test_incremental_advances_from_db_latest_timestamp(conn):
     fetcher = BinanceFetcher()
     captured_start: list[datetime] = []
 
-    async def capture_fetch(symbol, interval, **kwargs):
+    async def capture_fetch(symbol: str, interval: str, **kwargs: Any) -> list[OHLCV]:
         if "start_time" in kwargs:
             captured_start.append(kwargs["start_time"])
         return []  # Nothing new to ingest
@@ -170,7 +172,7 @@ async def test_incremental_advances_from_db_latest_timestamp(conn):
 
 
 @pytest.mark.asyncio
-async def test_backfill_fills_gap(conn):
+async def test_backfill_fills_gap(conn: asyncpg.Connection) -> None:
     """
     Scenario: DB has T=0h and T=5h but nothing in between.
     An explicit backfill call for start=T1h, end=T4h must insert T=1..4h.

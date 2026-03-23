@@ -48,7 +48,7 @@ class TestOHLCV:
             timeframe="1d",
         )
         with pytest.raises(ValidationError):
-            candle.close = 9999.0  # type: ignore[misc]
+            candle.close = 9999.0
 
     def test_missing_required_field_raises(self) -> None:
         with pytest.raises(ValidationError):
@@ -99,7 +99,7 @@ class TestMarketDataQuery:
             end_time=datetime(2025, 1, 2, tzinfo=timezone.utc),
         )
         with pytest.raises(ValidationError):
-            q.symbol = "ETH/USDT"  # type: ignore[misc]
+            q.symbol = "ETH/USDT"
 
 
 # ---------------------------------------------------------------------------
