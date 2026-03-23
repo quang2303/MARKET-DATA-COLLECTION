@@ -21,10 +21,10 @@ Run:
 """
 
 import os
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
 from collections.abc import AsyncGenerator
+from datetime import datetime, timedelta, timezone
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import asyncpg
 import pytest
@@ -131,7 +131,9 @@ async def test_double_ingest_no_duplicates(conn: asyncpg.Connection) -> None:
 
 
 @pytest.mark.asyncio
-async def test_incremental_advances_from_db_latest_timestamp(conn: asyncpg.Connection) -> None:
+async def test_incremental_advances_from_db_latest_timestamp(
+    conn: asyncpg.Connection,
+) -> None:
     """
     After seeding T=0..4h, the next ingest (no explicit start_time) must
     pass a start_time argument to the fetcher that is >= T=4h - overlap.

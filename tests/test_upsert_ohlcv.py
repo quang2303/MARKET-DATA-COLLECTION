@@ -13,12 +13,12 @@ Run:
 """
 
 import os
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
 
 import asyncpg
 import pytest
 import pytest_asyncio
-from collections.abc import AsyncGenerator
 from dotenv import load_dotenv
 
 from core.models import OHLCV
@@ -134,7 +134,9 @@ async def test_upsert_updates_close_price(conn: asyncpg.Connection) -> None:
 
 
 @pytest.mark.asyncio
-async def test_different_symbol_and_timeframe_are_independent(conn: asyncpg.Connection) -> None:
+async def test_different_symbol_and_timeframe_are_independent(
+    conn: asyncpg.Connection,
+) -> None:
     """
     Candles with the same timestamp but different symbol or timeframe
     must be stored as separate rows — no false conflict.
