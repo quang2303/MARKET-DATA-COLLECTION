@@ -8,8 +8,6 @@ Both the LLM call (parse_text_to_query) and DB are mocked.
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from core.schemas import MarketDataQuery
 from tests.conftest import make_ohlcv
 

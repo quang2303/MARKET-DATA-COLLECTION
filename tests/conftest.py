@@ -8,15 +8,13 @@ any real services.
 
 from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import httpx
 import pytest
 from fastapi import FastAPI
 
 from core.models import OHLCV
-
 
 # ---------------------------------------------------------------------------
 # Factory helpers

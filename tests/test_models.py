@@ -13,7 +13,6 @@ from pydantic import ValidationError
 from core.models import OHLCV
 from core.schemas import MarketDataQuery, TextQueryRequest
 
-
 # ---------------------------------------------------------------------------
 # OHLCV model
 # ---------------------------------------------------------------------------

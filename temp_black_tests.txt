@@ -1,0 +1,23 @@
+﻿venv\Scripts\black : would reformat 
+E:\Code\Market data collection and distribution 
+system\tests\test_market_data_api.py
+At line:1 char:1
++ venv\Scripts\black --check tests/ 2>&1 | 
+Out-File -Encoding utf8 temp ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (wo 
+   uld reformat ...ket_data_api.py:String) [],  
+   RemoteException
+    + FullyQualifiedErrorId : NativeCommandErro 
+   r
+ 
+would reformat E:\Code\Market data collection 
+and distribution 
+system\tests\test_upsert_ohlcv.py
+would reformat E:\Code\Market data collection 
+and distribution 
+system\tests\test_incremental_ingest.py
+
+Oh no! \U0001f4a5 \U0001f494 \U0001f4a5
+3 files would be reformatted, 5 files would be 
+left unchanged.

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List, Optional
+from typing import Any
 
 import asyncpg
 
@@ -29,7 +29,7 @@ class TimescaleDBClient:
 
     def __init__(self, dsn: str) -> None:
         self.dsn = dsn
-        self.pool: Optional[asyncpg.Pool[asyncpg.Record]] = None
+        self.pool: asyncpg.Pool[asyncpg.Record] | None = None
 
     async def connect(self) -> None:
         """Initialize the asyncpg connection pool."""
@@ -42,7 +42,7 @@ class TimescaleDBClient:
             await self.pool.close()
             logger.info("Closed TimescaleDB connection pool.")
 
-    async def upsert_ohlcv(self, data: List[OHLCV]) -> None:
+    async def upsert_ohlcv(self, data: list[OHLCV]) -> None:
         """
         Idempotent bulk upsert of OHLCV data using INSERT ... ON CONFLICT DO UPDATE.
 
@@ -56,7 +56,7 @@ class TimescaleDBClient:
         if not data:
             return
 
-        records: List[tuple[str, Any, float, float, float, float, float, str]] = [
+        records: list[tuple[str, Any, float, float, float, float, float, str]] = [
             (
                 item.symbol,
                 item.timestamp,
@@ -74,7 +74,7 @@ class TimescaleDBClient:
             await connection.executemany(_UPSERT_SQL, records)
             logger.debug(f"Successfully upserted {len(records)} OHLCV records.")
 
-    async def bulk_insert_ohlcv(self, data: List[OHLCV]) -> None:
+    async def bulk_insert_ohlcv(self, data: list[OHLCV]) -> None:
         """
         DEPRECATED: Use upsert_ohlcv() instead.
 
@@ -87,7 +87,7 @@ class TimescaleDBClient:
         if not data:
             return
 
-        records: List[tuple[str, Any, float, float, float, float, float, str]] = [
+        records: list[tuple[str, Any, float, float, float, float, float, str]] = [
             (
                 item.symbol,
                 item.timestamp,

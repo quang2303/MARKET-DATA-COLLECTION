@@ -1,12 +1,13 @@
-from typing import List
-from fastapi import APIRouter, Depends, Query, HTTPException
 from datetime import datetime
-import asyncpg
+from typing import List
 
+import asyncpg
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from api.llm import parse_text_to_query
 from core.models import OHLCV
 from core.schemas import MarketDataQuery, TextQueryRequest
 from db.database import get_db_connection, get_market_data
-from api.llm import parse_text_to_query
 
 router = APIRouter(prefix="/api/v1", tags=["Market Data"])
 

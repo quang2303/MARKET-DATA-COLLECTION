@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple
+from typing import Any
 
 import asyncpg  # type: ignore
 
@@ -20,7 +20,7 @@ _UPSERT_SQL = """
 
 
 async def upsert_ohlcv(
-    connection: asyncpg.Connection, data: List[OHLCV]
+    connection: asyncpg.Connection, data: list[OHLCV]
 ) -> None:
     """
     Idempotent bulk upsert of OHLCV data using INSERT ... ON CONFLICT DO UPDATE.
@@ -36,7 +36,7 @@ async def upsert_ohlcv(
     if not data:
         return
 
-    records: List[Tuple[Any, ...]] = [
+    records: list[tuple[Any, ...]] = [
         (
             record.symbol,
             record.timestamp,
@@ -54,7 +54,7 @@ async def upsert_ohlcv(
 
 
 async def bulk_insert_ohlcv(
-    connection: asyncpg.Connection, table_name: str, data: List[OHLCV]
+    connection: asyncpg.Connection, table_name: str, data: list[OHLCV]
 ) -> None:
     """
     DEPRECATED: Use upsert_ohlcv() instead.
@@ -67,7 +67,7 @@ async def bulk_insert_ohlcv(
     if not data:
         return
 
-    records: List[Tuple[Any, ...]] = [
+    records: list[tuple[Any, ...]] = [
         (
             record.symbol,
             record.timestamp,

@@ -36,7 +36,9 @@ from services.ingest import ingest_ohlcv
 
 load_dotenv(override=True)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/market_data")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://user:password@localhost:5432/market_data"
+)
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -81,7 +83,12 @@ def _make_candles(
 ) -> list[OHLCV]:
     if base_ts is None:
         base_ts = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    return [_make_candle(symbol=symbol, timeframe=timeframe, ts=base_ts + timedelta(hours=h)) for h in hours]
+    return [
+        _make_candle(
+            symbol=symbol, timeframe=timeframe, ts=base_ts + timedelta(hours=h)
+        )
+        for h in hours
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -201,6 +208,6 @@ async def test_backfill_fills_gap(conn):
         "1h",
     )
     # 2 boundary + 4 gap = 6
-    assert total == 6, (
-        f"Expected 6 total rows after backfill (2 boundary + 4 gap), got {total}."
-    )
+    assert (
+        total == 6
+    ), f"Expected 6 total rows after backfill (2 boundary + 4 gap), got {total}."

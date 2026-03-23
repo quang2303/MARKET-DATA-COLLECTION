@@ -1,0 +1,111 @@
+﻿F401 [*] `typing.Any` imported but unused
+  --> tests\conftest.py:11:20
+   |
+ 9 | from collections.abc import AsyncGenerator
+10 | from datetime import datetime, timezone
+11 | from typing import Any
+   |                    ^^^
+12 | from unittest.mock import AsyncMock, MagicMock
+   |
+help: Remove unused import: `typing.Any`
+
+F401 [*] `unittest.mock.MagicMock` imported but unused
+  --> tests\conftest.py:12:38
+   |
+10 | from datetime import datetime, timezone
+11 | from typing import Any
+12 | from unittest.mock import AsyncMock, MagicMock
+   |                                      ^^^^^^^^^
+13 |
+14 | import httpx
+   |
+help: Remove unused import: `unittest.mock.MagicMock`
+
+F401 [*] `pytest` imported but unused
+ --> tests\test_health.py:7:8
+  |
+5 | """
+6 |
+7 | import pytest
+  |        ^^^^^^
+  |
+help: Remove unused import: `pytest`
+
+E501 Line too long (109 > 88)
+  --> tests\test_incremental_ingest.py:84:89
+   |
+82 |     if base_ts is None:
+83 |         base_ts = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+84 |     return [_make_candle(symbol=symbol, timeframe=timeframe, ts=base_ts + timedelta(hours=h)) for h in hours]
+   |                                                                                         ^^^^^^^^^^^^^^^^^^^^^
+   |
+
+F401 [*] `pytest` imported but unused
+  --> tests\test_market_data_api.py:11:8
+   |
+ 9 | from unittest.mock import AsyncMock, patch
+10 |
+11 | import pytest
+   |        ^^^^^^
+12 |
+13 | from tests.conftest import make_ohlcv
+   |
+help: Remove unused import: `pytest`
+
+E501 Line too long (97 > 88)
+  --> tests\test_market_data_api.py:23:89
+   |
+21 |     ]
+22 |
+23 |     with patch("api.routers.market_data.get_market_data", new=AsyncMock(return_value=fake_data)):
+   |                                                                                         ^^^^^^^^^
+24 |         resp = await app_client.get(
+25 |             "/api/v1/market-data",
+   |
+
+F401 [*] `pytest` imported but unused
+  --> tests\test_query_by_text_api.py:11:8
+   |
+ 9 | from unittest.mock import AsyncMock, patch
+10 |
+11 | import pytest
+   |        ^^^^^^
+12 |
+13 | from core.schemas import MarketDataQuery
+   |
+help: Remove unused import: `pytest`
+
+F401 [*] `asyncio` imported but unused
+  --> tests\test_upsert_ohlcv.py:15:8
+   |
+13 | """
+14 |
+15 | import asyncio
+   |        ^^^^^^^
+16 | import os
+17 | from datetime import datetime, timezone
+   |
+help: Remove unused import: `asyncio`
+
+E501 Line too long (89 > 88)
+  --> tests\test_upsert_ohlcv.py:81:89
+   |
+80 |     await upsert_ohlcv(conn, data)
+81 |     await upsert_ohlcv(conn, data)  # second call ΓÇö must be a no-op in terms of row count
+   |                                                                                         ^
+82 |
+83 |     count = await conn.fetchval(
+   |
+
+E501 Line too long (89 > 88)
+   --> tests\test_upsert_ohlcv.py:112:89
+    |
+111 |     row = await conn.fetchrow(
+112 |         "SELECT close FROM ohlcv_data WHERE symbol=$1 AND timeframe=$2 AND timestamp=$3",
+    |                                                                                         ^
+113 |         "BTC/USDT",
+114 |         "1h",
+    |
+
+Found 10 errors.
+[*] 6 fixable with the `--fix` option.

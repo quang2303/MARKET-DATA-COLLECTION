@@ -1,7 +1,10 @@
 import os
 from datetime import datetime
+
 from google import genai
+
 from core.schemas import MarketDataQuery
+
 
 # Do not initialize a global client to prevent module crash if API key is missing
 def get_client() -> genai.Client:

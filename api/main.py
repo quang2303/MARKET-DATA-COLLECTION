@@ -1,17 +1,17 @@
-from fastapi import FastAPI
-from contextlib import asynccontextmanager
-from dotenv import load_dotenv
-from typing import AsyncGenerator
 import logging
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
+from dotenv import load_dotenv
+from fastapi import FastAPI
 
 # Set up simple logging
 logger = logging.getLogger("market_data_api")
 
 # Import database lifecycle events
-from db.database import init_db_pool, close_db_pool
-
 # Import the market data router
 from api.routers.market_data import router as market_data_router
+from db.database import close_db_pool, init_db_pool
 
 # Load environment variables
 load_dotenv(override=True)

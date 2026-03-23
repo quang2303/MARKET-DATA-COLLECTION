@@ -12,7 +12,6 @@ Run:
     python -m pytest tests/test_upsert_ohlcv.py -v
 """
 
-import asyncio
 import os
 from datetime import datetime, timezone
 
@@ -26,11 +25,14 @@ from db.database import upsert_ohlcv
 
 load_dotenv(override=True)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/market_data")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://user:password@localhost:5432/market_data"
+)
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest_asyncio.fixture
 async def conn():
@@ -66,6 +68,7 @@ def _make_candle(
 # Test 1 — Idempotency
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_upsert_is_idempotent(conn):
     """
@@ -78,7 +81,9 @@ async def test_upsert_is_idempotent(conn):
     ]
 
     await upsert_ohlcv(conn, data)
-    await upsert_ohlcv(conn, data)  # second call — must be a no-op in terms of row count
+    await upsert_ohlcv(
+        conn, data
+    )  # second call — must be a no-op in terms of row count
 
     count = await conn.fetchval(
         "SELECT COUNT(*) FROM ohlcv_data WHERE symbol = $1 AND timeframe = $2",
@@ -95,6 +100,7 @@ async def test_upsert_is_idempotent(conn):
 # Test 2 — Upsert updates values
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_upsert_updates_close_price(conn):
     """
@@ -109,20 +115,22 @@ async def test_upsert_updates_close_price(conn):
     await upsert_ohlcv(conn, [corrected])
 
     row = await conn.fetchrow(
-        "SELECT close FROM ohlcv_data WHERE symbol=$1 AND timeframe=$2 AND timestamp=$3",
+        "SELECT close FROM ohlcv_data "
+        "WHERE symbol=$1 AND timeframe=$2 AND timestamp=$3",
         "BTC/USDT",
         "1h",
         ts,
     )
     assert row is not None, "Row not found after upsert."
-    assert row["close"] == 105.0, (
-        f"Expected close=105.0 after corrected candle upsert, got {row['close']}."
-    )
+    assert (
+        row["close"] == 105.0
+    ), f"Expected close=105.0 after corrected candle upsert, got {row['close']}."
 
 
 # ---------------------------------------------------------------------------
 # Test 3 — Different symbol or timeframe do NOT conflict
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_different_symbol_and_timeframe_are_independent(conn):
@@ -143,6 +151,6 @@ async def test_different_symbol_and_timeframe_are_independent(conn):
         "SELECT COUNT(*) FROM ohlcv_data WHERE timestamp = $1",
         ts,
     )
-    assert count == 3, (
-        f"Expected 3 distinct rows (different symbol/timeframe), got {count}."
-    )
+    assert (
+        count == 3
+    ), f"Expected 3 distinct rows (different symbol/timeframe), got {count}."

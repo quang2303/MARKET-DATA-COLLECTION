@@ -8,8 +8,6 @@ DB dependency is mocked — no real database required.
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from tests.conftest import make_ohlcv
 
 
@@ -20,7 +18,9 @@ async def test_get_market_data_success(app_client) -> None:  # type: ignore[no-u
         for h in range(3)
     ]
 
-    with patch("api.routers.market_data.get_market_data", new=AsyncMock(return_value=fake_data)):
+    with patch(
+        "api.routers.market_data.get_market_data", new=AsyncMock(return_value=fake_data)
+    ):
         resp = await app_client.get(
             "/api/v1/market-data",
             params={
