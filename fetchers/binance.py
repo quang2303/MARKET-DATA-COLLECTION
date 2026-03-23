@@ -53,10 +53,12 @@ class BinanceFetcher:
         Args:
             symbol (str): Trading pair symbol, exchange-native format (e.g. "BTCUSDT").
             interval (str): Timeframe interval (e.g. "1m", "1h", "1d").
-            limit (int): Max candles per request when NOT using start_time. Defaults to 500.
-            start_time (datetime | None): Inclusive range start (UTC-aware). If provided,
-                pagination is used and ``limit`` is ignored.
-            end_time (datetime | None): Inclusive range end (UTC-aware). Defaults to now.
+            limit (int): Max candles per request when NOT using start_time.
+                Defaults to 500.
+            start_time (datetime | None): Inclusive range start (UTC-aware).
+                If provided, pagination is used and ``limit`` is ignored.
+            end_time (datetime | None): Inclusive range end (UTC-aware).
+                Defaults to now.
 
         Returns:
             List[OHLCV]: A deduplicated, time-ordered list of validated OHLCV models.
@@ -109,10 +111,14 @@ class BinanceFetcher:
             response = await client.get(endpoint, params=params)
 
             if response.status_code == 429:
-                logger.warning("Binance API Rate Limit Exceeded (HTTP 429). Retrying...")
+                logger.warning(
+                    "Binance API Rate Limit Exceeded (HTTP 429). Retrying..."
+                )
                 response.raise_for_status()
             elif response.status_code != 200:
-                logger.error(f"Binance API returned {response.status_code}: {response.text}")
+                logger.error(
+                    f"Binance API returned {response.status_code}: {response.text}"
+                )
                 response.raise_for_status()
 
             data: list[list[Any]] = response.json()
@@ -172,7 +178,8 @@ class BinanceFetcher:
             if last_ts_ms <= cursor_ms:
                 # Safety guard: if cursor didn't advance, break to avoid infinite loop
                 logger.warning(
-                    "Pagination cursor did not advance. Stopping to prevent infinite loop."
+                    "Pagination cursor did not advance. "
+                    "Stopping to prevent infinite loop."
                 )
                 break
             cursor_ms = last_ts_ms + 1
@@ -198,7 +205,9 @@ class BinanceFetcher:
             List[OHLCV]: Parsed list of models.
         """
         # Standardize symbol formatting (e.g. BTCUSDT -> BTC/USDT)
-        standard_symbol = f"{symbol[:-4]}/{symbol[-4:]}" if symbol.endswith("USDT") else symbol
+        standard_symbol = (
+            f"{symbol[:-4]}/{symbol[-4:]}" if symbol.endswith("USDT") else symbol
+        )
 
         parsed_data: list[OHLCV] = []
         for row in data:

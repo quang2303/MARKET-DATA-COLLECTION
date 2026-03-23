@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 # Upsert SQL — idempotent on (symbol, timeframe, timestamp).
 # Refreshes OHLCV prices in case a live candle was corrected by the exchange.
 _UPSERT_SQL = """
-    INSERT INTO ohlcv_data (symbol, timestamp, open, high, low, close, volume, timeframe)
+    INSERT INTO ohlcv_data (
+        symbol, timestamp, open, high, low, close, volume, timeframe
+    )
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT (symbol, timeframe, timestamp)
     DO UPDATE SET

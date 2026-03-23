@@ -6,9 +6,10 @@ from pydantic import BaseModel, ConfigDict, Field
 class OHLCV(BaseModel):
     """
     Standard OHLCV (Open, High, Low, Close, Volume) data model.
-    Every module in the system (fetchers, db, api) must strictly use this model 
+    Every module in the system (fetchers, db, api) must strictly use this model
     for data exchange to ensure data integrity and consistency.
     """
+
     model_config = ConfigDict(frozen=True)
 
     symbol: str = Field(..., description="Trading pair symbol (e.g., BTC/USDT)")

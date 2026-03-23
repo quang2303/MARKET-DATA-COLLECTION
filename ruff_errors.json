@@ -1,0 +1,339 @@
+﻿[
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 90,
+      "row": 23
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\api\\llm.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 23
+    },
+    "message": "Line too long (89 > 88)",
+    "noqa_row": 32,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 98,
+      "row": 24
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\api\\llm.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 24
+    },
+    "message": "Line too long (97 > 88)",
+    "noqa_row": 32,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "W293",
+    "end_location": {
+      "column": 5,
+      "row": 25
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\api\\llm.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 5,
+            "row": 25
+          },
+          "location": {
+            "column": 1,
+            "row": 25
+          }
+        }
+      ],
+      "message": "Remove whitespace from blank line"
+    },
+    "location": {
+      "column": 1,
+      "row": 25
+    },
+    "message": "Blank line contains whitespace",
+    "noqa_row": 32,
+    "url": "https://docs.astral.sh/ruff/rules/blank-line-with-whitespace"
+  },
+  {
+    "cell": null,
+    "code": "W293",
+    "end_location": {
+      "column": 5,
+      "row": 27
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\api\\llm.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 5,
+            "row": 27
+          },
+          "location": {
+            "column": 1,
+            "row": 27
+          }
+        }
+      ],
+      "message": "Remove whitespace from blank line"
+    },
+    "location": {
+      "column": 1,
+      "row": 27
+    },
+    "message": "Blank line contains whitespace",
+    "noqa_row": 32,
+    "url": "https://docs.astral.sh/ruff/rules/blank-line-with-whitespace"
+  },
+  {
+    "cell": null,
+    "code": "W293",
+    "end_location": {
+      "column": 5,
+      "row": 29
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\api\\llm.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 5,
+            "row": 29
+          },
+          "location": {
+            "column": 1,
+            "row": 29
+          }
+        }
+      ],
+      "message": "Remove whitespace from blank line"
+    },
+    "location": {
+      "column": 1,
+      "row": 29
+    },
+    "message": "Blank line contains whitespace",
+    "noqa_row": 32,
+    "url": "https://docs.astral.sh/ruff/rules/blank-line-with-whitespace"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 148,
+      "row": 31
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\api\\llm.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 31
+    },
+    "message": "Line too long (147 > 88)",
+    "noqa_row": 32,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 94,
+      "row": 48
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\api\\llm.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 48
+    },
+    "message": "Line too long (93 > 88)",
+    "noqa_row": 48,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 101,
+      "row": 35
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\api\\main.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 35
+    },
+    "message": "Line too long (100 > 88)",
+    "noqa_row": 35,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 103,
+      "row": 27
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\core\\schemas.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 27
+    },
+    "message": "Line too long (102 > 88)",
+    "noqa_row": 27,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 90,
+      "row": 12
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\db\\database.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 12
+    },
+    "message": "Line too long (89 > 88)",
+    "noqa_row": 21,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 96,
+      "row": 175
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\db\\database.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 175
+    },
+    "message": "Line too long (95 > 88)",
+    "noqa_row": 175,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 90,
+      "row": 10
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\db\\inserter.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 10
+    },
+    "message": "Line too long (89 > 88)",
+    "noqa_row": 19,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 90,
+      "row": 13
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\db\\timescale.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 13
+    },
+    "message": "Line too long (89 > 88)",
+    "noqa_row": 22,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 93,
+      "row": 56
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\fetchers\\binance.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 56
+    },
+    "message": "Line too long (92 > 88)",
+    "noqa_row": 63,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 90,
+      "row": 57
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\fetchers\\binance.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 57
+    },
+    "message": "Line too long (89 > 88)",
+    "noqa_row": 63,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 90,
+      "row": 59
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\fetchers\\binance.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 59
+    },
+    "message": "Line too long (89 > 88)",
+    "noqa_row": 63,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  },
+  {
+    "cell": null,
+    "code": "E501",
+    "end_location": {
+      "column": 92,
+      "row": 179
+    },
+    "filename": "E:\\Code\\Market data collection and distribution system\\fetchers\\binance.py",
+    "fix": null,
+    "location": {
+      "column": 89,
+      "row": 179
+    },
+    "message": "Line too long (91 > 88)",
+    "noqa_row": 179,
+    "url": "https://docs.astral.sh/ruff/rules/line-too-long"
+  }
+]

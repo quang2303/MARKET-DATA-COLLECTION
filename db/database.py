@@ -9,7 +9,9 @@ from core.models import OHLCV
 # Upsert SQL — idempotent on (symbol, timeframe, timestamp).
 # Refreshes OHLCV prices in case a live candle was corrected by the exchange.
 _UPSERT_SQL = """
-    INSERT INTO ohlcv_data (symbol, timestamp, open, high, low, close, volume, timeframe)
+    INSERT INTO ohlcv_data (
+        symbol, timestamp, open, high, low, close, volume, timeframe
+    )
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT (symbol, timeframe, timestamp)
     DO UPDATE SET
@@ -23,14 +25,18 @@ _UPSERT_SQL = """
 # Global connection pool instance
 pool: asyncpg.Pool | None = None
 
+
 async def init_db_pool() -> None:
     """
     Initialize connection pool for the database.
     This function should be called at FastAPI startup.
     """
     global pool
-    db_url = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/market_data")
+    db_url = os.getenv(
+        "DATABASE_URL", "postgresql://user:password@localhost:5432/market_data"
+    )
     pool = await asyncpg.create_pool(db_url)
+
 
 async def close_db_pool() -> None:
     """
@@ -41,6 +47,7 @@ async def close_db_pool() -> None:
     if pool is not None:
         await pool.close()
 
+
 async def get_db_connection() -> AsyncGenerator[asyncpg.Connection, None]:
     """
     FastAPI Dependency to provide database connections for API endpoints.
@@ -49,6 +56,7 @@ async def get_db_connection() -> AsyncGenerator[asyncpg.Connection, None]:
         raise RuntimeError("Database pool is not initialized")
     async with pool.acquire() as conn:
         yield conn
+
 
 async def upsert_ohlcv(conn: asyncpg.Connection, data: list[OHLCV]) -> None:
     """
@@ -106,8 +114,18 @@ async def bulk_insert_ohlcv(conn: asyncpg.Connection, data: list[OHLCV]) -> None
     await conn.copy_records_to_table(
         "ohlcv_data",
         records=records,
-        columns=["symbol", "timestamp", "open", "high", "low", "close", "volume", "timeframe"],
+        columns=[
+            "symbol",
+            "timestamp",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+            "timeframe",
+        ],
     )
+
 
 async def get_market_data(
     conn: asyncpg.Connection,
@@ -156,7 +174,8 @@ async def get_latest_timestamp(
         table contains no rows for this (symbol, timeframe) pair.
     """
     row = await conn.fetchrow(
-        "SELECT MAX(timestamp) AS latest FROM ohlcv_data WHERE symbol = $1 AND timeframe = $2",
+        "SELECT MAX(timestamp) AS latest FROM ohlcv_data "
+        "WHERE symbol = $1 AND timeframe = $2",
         symbol,
         timeframe,
     )

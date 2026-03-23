@@ -84,9 +84,7 @@ async def ingest_ohlcv(
         overlap rows that will be no-ops in the DB).
     """
     # --- Standardise symbol for DB queries (BinanceFetcher handles native format) ---
-    std_symbol = (
-        f"{symbol[:-4]}/{symbol[-4:]}" if symbol.endswith("USDT") else symbol
-    )
+    std_symbol = f"{symbol[:-4]}/{symbol[-4:]}" if symbol.endswith("USDT") else symbol
 
     # --- Resolve start_time ---
     if start_time is None:

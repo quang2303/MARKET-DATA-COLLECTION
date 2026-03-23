@@ -1,20 +1,19 @@
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
-# Set up simple logging
-logger = logging.getLogger("market_data_api")
-
-# Import database lifecycle events
-# Import the market data router
 from api.routers.market_data import router as market_data_router
 from db.database import close_db_pool, init_db_pool
 
+# Set up simple logging
+logger = logging.getLogger("market_data_api")
+
 # Load environment variables
 load_dotenv(override=True)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -23,20 +22,27 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         await init_db_pool()
         logger.info("Database connection pool initialized.")
     except Exception as e:
-        logger.warning(f"Failed to initialize database pool: {e}. Some endpoints may not work.")
+        logger.warning(
+            f"Failed to initialize database pool: {e}. Some endpoints may not work."
+        )
     yield
     # Shutdown event: Close DB pool
     await close_db_pool()
 
+
 app = FastAPI(
     title="Market Data Collection & Distribution System",
-    description="A robust system for handling crypto and stock market data, augmented with an LLM.",
+    description=(
+        "A robust system for handling crypto and stock market data, "
+        "augmented with an LLM."
+    ),
     version="0.1.0",
     lifespan=lifespan,
 )
 
 # Include Routers
 app.include_router(market_data_router)
+
 
 @app.get("/health")
 async def health_check() -> dict[str, str]:
