@@ -31,3 +31,10 @@ SELECT add_compression_policy('ohlcv_data', compress_after => INTERVAL '30 days'
 
 -- Add retention policy (drop chunks older than 1 year)
 SELECT add_retention_policy('ohlcv_data', drop_after => INTERVAL '1 year', if_not_exists => TRUE);
+
+-- Create users table for API authentication
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    hashed_password TEXT NOT NULL
+);

@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from api.errors import StructuredHTTPException
 from api.llm import parse_text_to_query
+from api.routers.auth import get_current_user
 from core.models import OHLCV
 from core.schemas import MarketDataQuery, TextQueryRequest
 from db.crud import get_market_data
@@ -19,6 +20,7 @@ router = APIRouter(prefix="/api/v1", tags=["Market Data"])
 async def get_market_data_endpoint(
     query: MarketDataQuery = Depends(),
     conn: asyncpg.Connection = Depends(get_db_connection),
+    current_user: dict = Depends(get_current_user),
 ) -> list[OHLCV]:
     """
     Query OHLCV market data from TimescaleDB.
@@ -59,6 +61,7 @@ async def get_market_data_endpoint(
 async def query_by_text_endpoint(
     request: TextQueryRequest,
     conn: asyncpg.Connection = Depends(get_db_connection),
+    current_user: dict = Depends(get_current_user),
 ) -> list[OHLCV]:
     """
     Accept natural language input from the User, then use Gemini API to extract

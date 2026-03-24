@@ -60,3 +60,18 @@ class TextQueryRequest(BaseModel):
             "(e.g., 'Get BTC 1H price for the last 3 days')"
         ),
     )
+
+
+class UserCreate(BaseModel):
+    email: str = Field(..., description="User's email address")
+    password: str = Field(..., min_length=6, description="Strong password")
+
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

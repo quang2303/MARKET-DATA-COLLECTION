@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
+from api.routers.auth import router as auth_router
 from api.routers.market_data import router as market_data_router
 from db.database import close_db_pool, init_db_pool
 
@@ -41,7 +42,9 @@ app = FastAPI(
 )
 
 # Include Routers
+app.include_router(auth_router)
 app.include_router(market_data_router)
+
 
 
 @app.get("/health")

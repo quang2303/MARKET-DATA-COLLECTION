@@ -68,6 +68,8 @@ class OHLCV(BaseModel):
 │   └── init.sql            # Hypertable, compression & retention setup
 ├── fetchers/
 │   └── binance.py          # Binance OHLCV fetcher with retry logic
+├── workers/
+│   └── pipeline.py         # CLI ingest tool (backfill & daemon)
 ├── .env.example            # Environment variable template
 ├── pyproject.toml          # Dependencies, linting (Ruff, Black, Mypy)
 └── CONTRIBUTING.md         # Coding standards for contributors & AI agents
@@ -172,6 +174,31 @@ Query using natural language. Gemini will extract the parameters automatically.
 Basic health check.
 ```json
 {"status": "ok"}
+```
+
+---
+
+## 🏗️ Background Ingest Pipeline
+
+To continuously or manually ingest data into TimescaleDB, use the built-in CLI pipeline block (`workers/pipeline.py`).
+
+### 1. Manual Ingest / Backfill
+Trigger a single incremental sync (automatically picking up from the latest DB timestamp), or define an explicit window to backfill.
+
+```bash
+# Incremental Sync for 1-hour BTC candles
+python -m workers.pipeline ingest --symbol BTCUSDT --timeframe 1h
+
+# Explicit Backfill
+python -m workers.pipeline ingest --symbol BTCUSDT --timeframe 15m --start "2024-01-01T00:00:00Z" --end "2024-01-14T00:00:00Z"
+```
+
+### 2. Run as a Daemon (Periodic Ingest)
+For production deployments, you can run the pipeline in an infinite loop without needing heavy frameworks like Celery.
+
+```bash
+# Sync BTC 1h candles every 3600 seconds
+python -m workers.pipeline daemon --symbol BTCUSDT --timeframe 1h --interval 3600
 ```
 
 ---
