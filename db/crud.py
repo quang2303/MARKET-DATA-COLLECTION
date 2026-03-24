@@ -55,6 +55,7 @@ async def get_market_data(
     timeframe: str,
     start_time: datetime,
     end_time: datetime,
+    limit: int = 1000,
 ) -> list[OHLCV]:
     """
     Retrieve OHLCV data from the DB based on parameters.
@@ -68,8 +69,9 @@ async def get_market_data(
           AND timestamp >= $3
           AND timestamp <= $4
         ORDER BY timestamp ASC
+        LIMIT $5
     """
-    rows = await conn.fetch(query, symbol, timeframe, start_time, end_time)
+    rows = await conn.fetch(query, symbol, timeframe, start_time, end_time, limit)
 
     # Map the returned results to OHLCV models
     return [OHLCV(**dict(row)) for row in rows]

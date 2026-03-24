@@ -1,8 +1,11 @@
 from datetime import datetime
 
 import asyncpg
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
+from google.api_core.exceptions import GoogleAPIError
+from pydantic import ValidationError
 
+from api.errors import StructuredHTTPException
 from api.llm import parse_text_to_query
 from core.models import OHLCV
 from core.schemas import MarketDataQuery, TextQueryRequest
@@ -14,20 +17,42 @@ router = APIRouter(prefix="/api/v1", tags=["Market Data"])
 
 @router.get("/market-data", response_model=list[OHLCV])
 async def get_market_data_endpoint(
-    symbol: str = Query(..., description="Trading pair (e.g., BTC/USDT)"),
-    timeframe: str = Query(..., description="Timeframe (e.g., 1m, 1h, 1d)"),
-    start_time: datetime = Query(..., description="Start timestamp"),
-    end_time: datetime = Query(..., description="End timestamp"),
+    query: MarketDataQuery = Depends(),
     conn: asyncpg.Connection = Depends(get_db_connection),
 ) -> list[OHLCV]:
     """
     Query OHLCV market data from TimescaleDB.
     """
     try:
-        data = await get_market_data(conn, symbol, timeframe, start_time, end_time)
+        data = await get_market_data(
+            conn, query.symbol, query.timeframe, query.start_time, query.end_time, query.limit
+        )
+        if not data:
+            raise StructuredHTTPException(
+                status_code=404,
+                error="Not Found",
+                detail="No market data found for the given parameters.",
+                code="NO_DATA_FOUND",
+                source="database",
+            )
         return data
+    except StructuredHTTPException:
+        raise
+    except asyncpg.PostgresError as e:
+        raise StructuredHTTPException(
+            status_code=500,
+            error="Database Error",
+            detail="Failed to query the database.",
+            code="DB_QUERY_FAILED",
+            source="database",
+        ) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise StructuredHTTPException(
+            status_code=500,
+            error="Internal Server Error",
+            detail="An unexpected error occurred while processing the request.",
+            code="INTERNAL_ERROR",
+        ) from e
 
 
 @router.post("/query-by-text", response_model=list[OHLCV])
@@ -53,9 +78,65 @@ async def query_by_text_endpoint(
             timeframe=parsed_query.timeframe,
             start_time=parsed_query.start_time,
             end_time=parsed_query.end_time,
+            limit=parsed_query.limit,
         )
+        
+        if not data:
+            raise StructuredHTTPException(
+                status_code=404,
+                error="Not Found",
+                detail="The extracted query resulted in no market data.",
+                code="NO_DATA_FOUND",
+                source="database",
+            )
+            
         return data
+    except StructuredHTTPException:
+        raise
+    except ValidationError:
+        raise StructuredHTTPException(
+            status_code=400,
+            error="Bad Request",
+            detail="LLM failed to parse the natural language query into valid parameters.",
+            code="LLM_PARSE_FAILED",
+            source="llm_provider",
+        )
+    except ValueError as e:
+        if "empty response" in str(e).lower():
+            raise StructuredHTTPException(
+                status_code=502,
+                error="Bad Gateway",
+                detail="LLM returned empty response.",
+                code="LLM_EMPTY_OUTPUT",
+                source="llm_provider",
+            ) from e
+        
+        raise StructuredHTTPException(
+            status_code=500,
+            error="Internal Server Error",
+            detail="An unexpected error occurred.",
+            code="INTERNAL_ERROR",
+        ) from e
+    except GoogleAPIError as e:
+        raise StructuredHTTPException(
+            status_code=502,
+            error="Bad Gateway",
+            detail="External LLM provider error (timeout or unavailable).",
+            code="LLM_PROVIDER_ERROR",
+            source="llm_provider",
+        ) from e
+    except asyncpg.PostgresError as e:
+        raise StructuredHTTPException(
+            status_code=500,
+            error="Database Error",
+            detail="Failed to query the database using the extracted parameters.",
+            code="DB_QUERY_FAILED",
+            source="database",
+        ) from e
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"LLM Processing or DB Query Failed: {e!s}"
+        raise StructuredHTTPException(
+            status_code=500,
+            error="Internal Server Error",
+            detail="An unexpected error occurred while processing the natural language query.",
+            code="INTERNAL_ERROR",
         ) from e
