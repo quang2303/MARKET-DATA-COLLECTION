@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from api.llm import parse_text_to_query
 from core.models import OHLCV
 from core.schemas import MarketDataQuery, TextQueryRequest
-from db.database import get_db_connection, get_market_data
+from db.crud import get_market_data
+from db.database import get_db_connection
 
 router = APIRouter(prefix="/api/v1", tags=["Market Data"])
 

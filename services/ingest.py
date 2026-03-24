@@ -24,7 +24,7 @@ from datetime import datetime, timedelta, timezone
 
 import asyncpg
 
-from db.database import get_latest_timestamp, upsert_ohlcv
+from db.crud import get_latest_timestamp, upsert_ohlcv
 from fetchers.binance import BinanceFetcher
 
 logger = logging.getLogger(__name__)

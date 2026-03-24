@@ -22,7 +22,7 @@ import pytest_asyncio
 from dotenv import load_dotenv
 
 from core.models import OHLCV
-from db.database import upsert_ohlcv
+from db.crud import upsert_ohlcv
 
 load_dotenv(override=True)
 
